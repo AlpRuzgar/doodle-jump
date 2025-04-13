@@ -54,6 +54,7 @@ let gameOverScreen;
 let victoryY = spaceThreshold - 8000;
 let victoryScreen;
 let victoryAchieved = false;
+let trophy;
 
 
 function preload() {
@@ -70,6 +71,8 @@ function preload() {
     this.load.image('ufo', 'assets/ufo.png');
     this.load.image('alien', 'assets/alien.png');
     this.load.image('bullet', 'assets/bullet.png');
+    this.load.image('trophy', 'assets/trophy.png');
+
 
     this.load.image('scorePanel', 'assets/ui/score_panel.png');
     this.load.image('healthBar', 'assets/ui/health_bar.png');
@@ -84,7 +87,6 @@ function preload() {
     this.load.image('restartButton', 'assets/ui/restart_button.png');
     this.load.image('restartButtonSpace', 'assets/ui/restart_button_space.png');
     this.load.image('victoryTextSpace', 'assets/ui/victory_text_space.png');
-
 
 }
 
@@ -112,10 +114,10 @@ function create() {
     }
 
     //karakter oluşturma
-    player = this.physics.add.sprite(config.width / 2, 700, 'player');
+    player = this.physics.add.sprite(config.width / 2, 800, 'player');//Y = config.height - 200
     player.setScale(0.35);
     player.setCollideWorldBounds(false);
-    player.setVelocityY(-jumpPower);
+    player.setVelocityY(-100)
 
     player.body.setSize(player.width, player.height);
     player.body.setOffset(0, 0);
@@ -131,6 +133,7 @@ function create() {
     this.cameras.main.startFollow(player, false, 0, 1);
     this.cameras.main.setFollowOffset(0, -config.height / 4);
 
+
     cursors = this.input.keyboard.createCursorKeys();
 
     //mobil kontroller
@@ -140,12 +143,19 @@ function create() {
     if (isTouchDevice) {
         this.input.on('pointermove', function (pointer) {
             if (!player || !gameActive) return;
-    
+
             // Parmağın X konumuna göre karakterin pozisyonunu ayarla
             player.x = Phaser.Math.Clamp(pointer.x, 0, config.width);
         }, this);
     }
-    
+
+    // Trophy'yi victoryY konumuna yerleştir
+    trophy = this.physics.add.sprite(config.width / 2, victoryY, 'trophy');
+    trophy.setScale(0.2);
+    trophy.body.setSize(trophy.width * 0.2, trophy.height * 0.2);
+    trophy.body.setAllowGravity(false);
+    trophy.setImmovable(true);
+
 
     //colliderlar : normal
     this.physics.add.collider(player, normalPlatforms, (player, platform) => {
@@ -280,6 +290,10 @@ function create() {
     //fizik eklemeleri
     this.physics.add.overlap(player, coins, collectCoin, null, this);
 
+    this.physics.add.overlap(player, trophy, () => {
+        showVictoryScreen(this);
+    });
+
     this.physics.add.overlap(player, enemies, handleEnemyCollision, null, this);
 
     alienBullets = this.physics.add.group({
@@ -308,19 +322,19 @@ function update() {
     function adjustCameraDeadzone() {
 
         if (player.body.velocity.y < 0) {
-
-            this.cameras.main.setFollowOffset(0, config.height / 3);
+            //kamera takip noktası ayarlama
+            this.cameras.main.setFollowOffset(0, config.height * 2 / 10);
         }
     }
 
     inSpaceStage = checkSpaceStage(player.y);
-    checkVictoryCondition.call(this);
+    //    checkVictoryCondition.call(this);
 
     const cameraTop = this.cameras.main.scrollY;
     const visibleHeight = this.cameras.main.height;
     const generationThreshold = cameraTop - visibleHeight * 0.5;
 
-    if (lastPlatformY > generationThreshold) {
+    if (lastPlatformY > generationThreshold && cameraTop - 200 < lastPlatformY && player.y - config.height - 200 > victoryY) {
         let platformType = Phaser.Math.Between(1, 10);
         if (platformType <= 6) {
             addNormalPlatform(this);
@@ -340,6 +354,7 @@ function update() {
 
     if (player.y < this.cameras.main.scrollY + jumpPower * 9 / 10 && player.body.velocity.y < 0) {
         this.cameras.main.scrollY = player.y - jumpPower * 9 / 10;
+
     }
 
     if (this.cameras.main.scrollY > lastY) {
@@ -381,13 +396,6 @@ function update() {
                 showGameOver(this);
             }
         });
-    }
-
-
-    function checkVictoryCondition() {
-        if (!victoryAchieved && player.y < victoryY) {
-            showVictoryScreen(this);
-        }
     }
 
     // bird
@@ -446,7 +454,7 @@ function update() {
 
 
     // alien
-    if (gameActive && inSpaceStage) {
+    if (gameActive && inSpaceStage && player.y - config.height > victoryY) {
         if (Phaser.Math.Between(1, 200) === 1) {
             let x = Phaser.Math.Between(100, config.width - 100);
             let y = player.y - 900;
@@ -519,7 +527,7 @@ function update() {
     }
 
     // ufo
-    if (gameActive) {
+    if (gameActive && player.y - config.height > victoryY) {
         if (inSpaceStage && Phaser.Math.Between(1, 250) === 1) {
             let x = Phaser.Math.Between(100, config.width - 100);
             let y = player.y - 900;
@@ -886,11 +894,6 @@ function addBreakingPlatform(scene) {
     breakingPlatform.refreshBody();
 }
 
-
-function startingJump() {
-    player.setVelocityY(-(jumpPower + 200));
-}
-
 function handlePlatformCollision(player, platform, jumpPower) {
     let playerBottom = player.y + player.displayHeight / 2;
     let platformTop = platform.y - platform.displayHeight / 2;
@@ -1186,6 +1189,9 @@ function showVictoryScreen(scene) {
 
         scene.scene.restart();
     });
+
+    let confetti = this.add.particles('confetti');
+
 }
 
 function cleanupBullets() {
@@ -1217,7 +1223,7 @@ function cleanupBullets() {
 
 function createInitialGround(scene) {
 
-    let startGround = ground.create(config.width / 2, 870, 'ground');
+    let startGround = ground.create(config.width / 2, config.height, 'ground');
     startGround.setScale(5);
 
     startGround.body.checkCollision.up = true;
@@ -1231,7 +1237,7 @@ function createInitialGround(scene) {
     startGround.refreshBody();
 
     scene.physics.add.collider(player, ground, (player, platform) => {
-        handlePlatformCollision(player, platform, jumpPower);
+        handlePlatformCollision(player, platform, jumpPower + 200);
     });
 }
 
