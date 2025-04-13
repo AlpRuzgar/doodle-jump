@@ -1190,8 +1190,6 @@ function showVictoryScreen(scene) {
         scene.scene.restart();
     });
 
-    let confetti = this.add.particles('confetti');
-
 }
 
 function cleanupBullets() {
