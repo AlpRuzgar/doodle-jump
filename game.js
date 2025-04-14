@@ -114,7 +114,7 @@ function create() {
     }
 
     //karakter oluşturma
-    player = this.physics.add.sprite(config.width / 2, spaceThreshold, 'player');//Y = config.height - 200
+    player = this.physics.add.sprite(config.width / 2, config.height - 200, 'player');//Y = config.height - 200
     player.setScale(0.35);
     player.setCollideWorldBounds(false);
     player.setVelocityY(-100)
