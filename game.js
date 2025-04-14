@@ -114,7 +114,7 @@ function create() {
     }
 
     //karakter oluşturma
-    player = this.physics.add.sprite(config.width / 2, 800, 'player');//Y = config.height - 200
+    player = this.physics.add.sprite(config.width / 2, spaceThreshold, 'player');//Y = config.height - 200
     player.setScale(0.35);
     player.setCollideWorldBounds(false);
     player.setVelocityY(-100)
@@ -131,7 +131,7 @@ function create() {
 
     //kamera takip
     this.cameras.main.startFollow(player, false, 0, 1);
-    this.cameras.main.setFollowOffset(0, -config.height / 4);
+    this.cameras.main.setFollowOffset(0, -config.height * 2 / 10);
 
 
     cursors = this.input.keyboard.createCursorKeys();
@@ -316,11 +316,13 @@ function create() {
 
 function update() {
 
+    let cameraTopY = this.cameras.main.scrollY;
+    let cameraBottomY = cameraTopY + config.height;
+
     handlePlayerMovement();
     adjustCameraDeadzone.call(this);
 
     function adjustCameraDeadzone() {
-
         if (player.body.velocity.y < 0) {
             //kamera takip noktası ayarlama
             this.cameras.main.setFollowOffset(0, config.height * 2 / 10);
@@ -363,7 +365,6 @@ function update() {
         lastY = this.cameras.main.scrollY;
     }
 
-    let cameraBottomY = this.cameras.main.scrollY + config.height;
     if (player.y > cameraBottomY + 500) {
 
         normalPlatforms.children.each(function (platform) {
@@ -401,179 +402,24 @@ function update() {
     // bird
 
     if (gameActive) {
-        if (!inSpaceStage && player.y < cloudSpawnThreshold && Phaser.Math.Between(1, 130) === 1) {
-            let x = Phaser.Math.Between(100, config.width - 100);
-            let y = player.y - 900;
-
-            let canSpawnBird = true;
-            enemies.children.entries.forEach((enemy) => {
-                if (enemy.texture.key === 'bird' &&
-                    Math.abs(enemy.x - x) < 300 &&
-                    Math.abs(enemy.y - y) < 300) {
-                    canSpawnBird = false;
-                }
-            });
-
-            if (canSpawnBird) {
-                let bird = enemies.create(x, y, 'bird');
-                bird.setScale(1.2);
-
-                bird.body.setGravity(0, 0);
-                bird.body.velocity.y = 0;
-                bird.body.allowGravity = false;
-                bird.body.moves = false;
-                bird.setImmovable(true);
-
-                enemies.add(bird);
-
-                let movementDistance = Phaser.Math.Between(100, 200);
-                let movingRight = movementDistance > 0;
-
-                bird.setFlipX(!movingRight);
-
-                this.tweens.add({
-                    targets: bird,
-                    x: x + movementDistance,
-                    scaleY: bird.scaleY * 0.85,
-                    y: bird.y - 20,
-                    duration: 2000,
-                    yoyo: true,
-                    repeat: -1,
-                    onYoyo: () => {
-                        bird.setFlipX(true);
-                    },
-                    repeat: -1,
-                    onRepeat: () => {
-                        bird.setFlipX(false);
-                    }
-                });
-            }
+        if (gameActive && !inSpaceStage && player.y < cloudSpawnThreshold && Phaser.Math.Between(1, 130) === 1) {
+            spawnBird(this);
         }
     }
 
 
 
     // alien
-    if (gameActive && inSpaceStage && player.y - config.height > victoryY) {
+    if (gameActive && inSpaceStage && player.y - config.height > victoryY ) {
         if (Phaser.Math.Between(1, 200) === 1) {
-            let x = Phaser.Math.Between(100, config.width - 100);
-            let y = player.y - 900;
-
-
-            let canSpawnAlien = true;
-            enemies.children.entries.forEach((enemy) => {
-
-                if (Math.abs(enemy.x - x) < 400 && Math.abs(enemy.y - y) < 400) {
-                    canSpawnAlien = false;
-                }
-            });
-
-            if (canSpawnAlien) {
-                let alien = enemies.create(x, y, 'alien');
-                alien.setScale(0.9);
-
-                alien.body.setGravity(0, 0);
-                alien.body.velocity.y = 0;
-                alien.body.allowGravity = false;
-                alien.body.moves = false;
-                alien.setImmovable(true);
-
-                this.tweens.add({
-                    targets: alien,
-                    y: y - 10,
-                    angle: Phaser.Math.Between(-5, 5),
-                    alpha: 0.85,
-                    duration: 1500,
-                    yoyo: true,
-                    repeat: -1,
-                    ease: 'Sine.easeInOut'
-                });
-
-                alien.setTint(0xccffcc);
-
-                this.time.addEvent({
-                    delay: 2000,
-                    callback: () => {
-                        if (gameActive && alien.active) {
-                            let distanceToPlayer = Phaser.Math.Distance.Between(
-                                alien.x, alien.y,
-                                player.x, player.y
-                            );
-
-                            if (distanceToPlayer < 800) {
-                                let bullet = alienBullets.create(alien.x, alien.y, 'bullet');
-                                bullet.setScale(1.0);
-                                bullet.setDataEnabled();
-                                bullet.data.set('created', Date.now());
-                                let angle = Phaser.Math.Angle.Between(
-                                    alien.x, alien.y,
-                                    player.x, player.y
-                                );
-
-                                const bulletSpeed = 300;
-                                bullet.body.velocity.x = Math.cos(angle) * bulletSpeed;
-                                bullet.body.velocity.y = Math.sin(angle) * bulletSpeed;
-                                bullet.setAngle(Phaser.Math.RadToDeg(angle) - 90);
-
-
-                            }
-                        }
-
-                    },
-                    loop: true
-                });
-            }
+            spawnAlien(this);
         }
     }
 
     // ufo
     if (gameActive && player.y - config.height > victoryY) {
         if (inSpaceStage && Phaser.Math.Between(1, 250) === 1) {
-            let x = Phaser.Math.Between(100, config.width - 100);
-            let y = player.y - 900;
-
-
-            let canSpawnUFO = true;
-            enemies.children.entries.forEach((enemy) => {
-
-                if (Math.abs(enemy.x - x) < 400 && Math.abs(enemy.y - y) < 400) {
-                    canSpawnUFO = false;
-                }
-            });
-
-            if (canSpawnUFO) {
-                let ufo = enemies.create(x, y, 'ufo');
-                ufo.setScale(1.3);
-
-                ufo.body.setSize(
-                    ufo.width * 0.5,
-                    ufo.height * 0.3
-                );
-
-
-                ufo.body.setOffset(
-                    ufo.width * 0.25,
-                    ufo.height * 0.35
-                );
-
-                ufo.body.setGravity(0, 0);
-                ufo.body.velocity.y = 0;
-                ufo.body.allowGravity = false;
-                ufo.body.moves = false;
-                ufo.setImmovable(true);
-
-                this.tweens.add({
-                    targets: ufo,
-                    x: x + Phaser.Math.Between(-80, 80),
-                    y: y - 10,
-                    angle: 10,
-                    alpha: 0.65,
-                    duration: 2000,
-                    yoyo: true,
-                    repeat: -1,
-                    ease: 'Sine.easeInOut'
-                });
-            }
+            spawnUFO(this);
         }
     }
 
@@ -739,6 +585,8 @@ function addCoin(scene) {
         coin.destroy();
     }
 }
+
+//normal platform
 function addNormalPlatform(scene) {
     let x = Phaser.Math.Between(0, config.width);
     let y = lastPlatformY - platformGap;
@@ -910,11 +758,175 @@ function handlePlatformCollision(player, platform, jumpPower) {
     }
 }
 
+//kuş düşman
+function spawnBird(scene) {
+    let x = Phaser.Math.Between(100, config.width - 100);
+    let y = player.y - 900;
+    let canSpawnBird = true;
 
+    enemies.children.entries.forEach((enemy) => {
+        if (enemy.texture.key === 'bird' &&
+            Math.abs(enemy.x - x) < 300 &&
+            Math.abs(enemy.y - y) < 300) {
+            canSpawnBird = false;
+        }
+    });
+
+    if (!canSpawnBird) return;
+
+    let bird = enemies.create(x, y, 'bird');
+    bird.setScale(1.2);
+    bird.body.setGravity(0, 0);
+    bird.body.velocity.y = 0;
+    bird.body.allowGravity = false;
+    bird.body.moves = false;
+    bird.setImmovable(true);
+
+    let movementDistance = Phaser.Math.Between(100, 200);
+    let movingRight = movementDistance > 0;
+
+    bird.setFlipX(!movingRight);
+
+    scene.tweens.add({
+        targets: bird,
+        x: x + movementDistance,
+        scaleY: bird.scaleY * 0.85,
+        y: bird.y - 20,
+        duration: 2000,
+        yoyo: true,
+        repeat: -1,
+        onYoyo: () => {
+            bird.setFlipX(true);
+        },
+        onRepeat: () => {
+            bird.setFlipX(false);
+        }
+    });
+}
+
+//Alien düşman
+function spawnAlien(scene) {
+    let x = Phaser.Math.Between(100, config.width - 100);
+    let y = player.y - 900;
+
+
+    let canSpawnAlien = true;
+    enemies.children.entries.forEach((enemy) => {
+
+        if (Math.abs(enemy.x - x) < 400 && Math.abs(enemy.y - y) < 400) {
+            canSpawnAlien = false;
+        }
+    });
+
+    if (canSpawnAlien) {
+        let alien = enemies.create(x, y, 'alien');
+        alien.setScale(0.9);
+
+        alien.body.setGravity(0, 0);
+        alien.body.velocity.y = 0;
+        alien.body.allowGravity = false;
+        alien.body.moves = false;
+        alien.setImmovable(true);
+
+        scene.tweens.add({
+            targets: alien,
+            y: y - 10,
+            angle: Phaser.Math.Between(-5, 5),
+            alpha: 0.85,
+            duration: 1500,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        alien.setTint(0xccffcc);
+
+        scene.time.addEvent({
+            delay: 2000,
+            callback: () => {
+                if (gameActive && alien.active) {
+                    let distanceToPlayer = Phaser.Math.Distance.Between(
+                        alien.x, alien.y,
+                        player.x, player.y
+                    );
+
+                    if (distanceToPlayer < 800) {
+                        let bullet = alienBullets.create(alien.x, alien.y, 'bullet');
+                        bullet.setScale(1.0);
+                        bullet.setDataEnabled();
+                        bullet.data.set('created', Date.now());
+                        let angle = Phaser.Math.Angle.Between(
+                            alien.x, alien.y,
+                            player.x, player.y
+                        );
+
+                        const bulletSpeed = 300;
+                        bullet.body.velocity.x = Math.cos(angle) * bulletSpeed;
+                        bullet.body.velocity.y = Math.sin(angle) * bulletSpeed;
+                        bullet.setAngle(Phaser.Math.RadToDeg(angle) - 90);
+
+
+                    }
+                }
+
+            },
+            loop: true
+        });
+    }
+}
+
+//ufo düşmanı
+function spawnUFO(scene) {
+    let x = Phaser.Math.Between(100, config.width - 100);
+    let y = player.y - 900;
+
+
+    let canSpawnUFO = true;
+    enemies.children.entries.forEach((enemy) => {
+
+        if (Math.abs(enemy.x - x) < 400 && Math.abs(enemy.y - y) < 400) {
+            canSpawnUFO = false;
+        }
+    });
+
+    if (canSpawnUFO) {
+        let ufo = enemies.create(x, y, 'ufo');
+        ufo.setScale(1.3);
+
+        ufo.body.setSize(
+            ufo.width * 0.5,
+            ufo.height * 0.3
+        );
+
+
+        ufo.body.setOffset(
+            ufo.width * 0.25,
+            ufo.height * 0.35
+        );
+
+        ufo.body.setGravity(0, 0);
+        ufo.body.velocity.y = 0;
+        ufo.body.allowGravity = false;
+        ufo.body.moves = false;
+        ufo.setImmovable(true);
+
+        scene.tweens.add({
+            targets: ufo,
+            x: x + Phaser.Math.Between(-80, 80),
+            y: y - 10,
+            angle: 10,
+            alpha: 0.65,
+            duration: 2000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+    }
+}
 
 function handleEnemyCollision(player, enemy) {
 
-    enemy.destroy();
+    //    enemy.destroy();
     this.physics.pause();
     gameActive = false;
     showGameOver(this);
