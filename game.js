@@ -64,7 +64,7 @@ let backgroundMusic;
 
 
 function preload() {
-    //this.load.image('background', 'assets/background.png');
+    this.load.image('background', 'assets/background.png');
     this.load.image('platform', 'assets/platform.png');
     this.load.image('platformSpace', 'assets/platformSpace.png');
     this.load.image('movingPlatform', 'assets/movingPlatform.png');
