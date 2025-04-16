@@ -58,6 +58,9 @@ let maxFallDistance = config.height * 0.8;
 let highestPlayerY = 0;
 let startScreenActive = true;
 let startScreenElements = [];
+let gameOverSoundPlayed = false;
+let canPlayDamageSound = true;
+let backgroundMusic;
 
 
 function preload() {
@@ -91,6 +94,20 @@ function preload() {
     this.load.image('victoryTextSpace', 'assets/ui/victory_text_space.png');
     this.load.image('startButton', 'assets/ui/start_button.png');
 
+    //Sesler
+    this.load.audio('jump', 'assets/sounds/jump.mp3');
+    this.load.audio('gameOverSound', 'assets/sounds/gameover.mp3');
+    this.load.audio('bulletFire', 'assets/sounds/bullet.mp3');
+    this.load.audio('coinSound', 'assets/sounds/coin.mp3');
+    this.load.audio('damageSound', 'assets/sounds/damage.mp3');
+    this.load.audio('backgroundMusic', 'assets/sounds/backgroundMusic.mp3');
+    this.load.audio('buttonClick', 'assets/sounds/buttonClick.mp3');
+    this.load.audio('victorySound', 'assets/sounds/win.mp3');
+
+    this.load.audio('alienSound', 'assets/sounds/alien.mp3');
+    this.load.audio('ufoSound', 'assets/sounds/ufo.mp3');
+    this.load.audio('birdSound', 'assets/sounds/bird.mp3');
+
 }
 
 function create() {
@@ -115,7 +132,16 @@ function create() {
     );
     groundBelowTrampoline.setOrigin(0.5, 0);  
     groundBelowTrampoline.setScrollFactor(0.9); 
-    groundBelowTrampoline.setDepth(-1);      
+    groundBelowTrampoline.setDepth(-1);     
+    
+    if (!backgroundMusic) {
+        backgroundMusic = this.sound.add('backgroundMusic', { loop: true, volume: 0.5 });
+        backgroundMusic.play();
+    } else {
+        if (!backgroundMusic.isPlaying) {
+            backgroundMusic.play();
+        }
+    }
 
     normalPlatforms = this.physics.add.staticGroup();
     movingPlatforms = this.physics.add.group();
@@ -182,6 +208,7 @@ function create() {
 
             handlePlatformCollision(player, platform, jumpPower);
             animatePlayerLanding(this, player);
+            this.sound.play('jump');
             this.tweens.add({
                 targets: platform,
                 y: platform.y + 15,
@@ -221,6 +248,8 @@ function create() {
 
             handlePlatformCollision(player, platform, jumpPower);
             animatePlayerLanding(this, player);
+            this.sound.play('jump');
+            
             this.tweens.add({
                 targets: platform,
                 y: platform.y + 15,
@@ -259,6 +288,7 @@ function create() {
         if (player.body.velocity.y >= 0 && playerBottom <= platformTop + 5) {
             handlePlatformCollision(player, platform, jumpPower);
             animatePlayerLanding(this, player);
+            this.sound.play('jump');
             this.tweens.add({
                 targets: platform,
                 alpha: 0,
@@ -323,7 +353,31 @@ function create() {
 
     this.physics.add.overlap(player, alienBullets, handleBulletCollision, null, this);
 
-    createStartScreen(this);
+    if (startScreenActive) {
+        createStartScreen(this); // İlk açılışta çalışır
+    } else {
+        // Restart sonrası otomatik başlat: trambolinden zıplayarak
+        gameActive = true;
+        player.setVisible(true);
+        player.setVelocityY(-jumpPower - 200); // Güçlü zıplatma (trambolin etkisi)
+        this.physics.resume(); // Fizikleri devam ettir
+
+        // UI elemanlarını görünür yap
+        if (scoreText) scoreText.setVisible(true);
+        if (healthPoints) {
+            healthPoints.children.each(function (point) {
+                point.setVisible(true);
+            });
+        }
+
+        this.children.list.forEach(child => {
+            if (child.texture &&
+                (child.texture.key === 'scorePanel' ||
+                 child.texture.key === 'healthBar')) {
+                child.setVisible(true);
+            }
+        });
+    }
 }
 
 function update() {
@@ -602,6 +656,8 @@ function collectCoin(player, coin) {
     score += 10;
     scoreText.setText(score.toString());
 
+    this.sound.play('coinSound');
+
     console.log('Coin collected! Score: ' + score);
 }
 
@@ -850,6 +906,8 @@ function spawnBird(scene) {
     bird.body.moves = false;
     bird.setImmovable(true);
 
+    scene.sound.play('birdSound');
+
     let movementDistance = Phaser.Math.Between(100, 200);
     let movingRight = movementDistance > 0;
 
@@ -896,6 +954,8 @@ function spawnAlien(scene) {
         alien.body.moves = false;
         alien.setImmovable(true);
 
+        scene.sound.play('alienSound');
+
         scene.tweens.add({
             targets: alien,
             y: y - 10,
@@ -932,6 +992,7 @@ function spawnAlien(scene) {
                         bullet.body.velocity.x = Math.cos(angle) * bulletSpeed;
                         bullet.body.velocity.y = Math.sin(angle) * bulletSpeed;
                         bullet.setAngle(Phaser.Math.RadToDeg(angle) - 90);
+                        scene.sound.play('bulletFire');
 
 
                     }
@@ -978,6 +1039,8 @@ function spawnUFO(scene) {
         ufo.body.moves = false;
         ufo.setImmovable(true);
 
+        scene.sound.play('ufoSound');
+
         scene.tweens.add({
             targets: ufo,
             x: x + Phaser.Math.Between(-80, 80),
@@ -1003,6 +1066,17 @@ function handleEnemyCollision(player, enemy) {
 function handleBulletCollision(player, bullet) {
 
     bullet.destroy();
+
+    if (canPlayDamageSound) {
+        this.sound.play('damageSound');
+        canPlayDamageSound = false;
+
+        // Örneğin 300ms sonra yeniden ses çalabilsin.
+        this.time.delayedCall(300, () => {
+            canPlayDamageSound = true;
+        });
+    }
+
     playerHealth--;
 
     let lastHealthPoint = healthPoints.getChildren()[healthPoints.getChildren().length - 1];
@@ -1033,6 +1107,9 @@ function handleBulletCollision(player, bullet) {
 }
 
 function showGameOver(scene) {
+
+    if (gameOverSoundPlayed) return; // Eğer zaten çalıştıysa, tekrar çalışmasın
+    gameOverSoundPlayed = true;
 
     scene.physics.pause();
     scene.tweens.pauseAll();
@@ -1146,6 +1223,7 @@ function showGameOver(scene) {
     // Restart functionality
     restartButton.on('pointerup', () => {
 
+        scene.sound.play('buttonClick', { volume: 0.5 });
         score = 0;
         playerHealth = 5;
         gameActive = true;
@@ -1154,6 +1232,10 @@ function showGameOver(scene) {
         lastPlatformY = 700;
         lastY = 0;
         highestPlayerY = 0;
+
+        startScreenActive = false;
+
+        gameOverSoundPlayed = false;
 
         normalPlatforms.clear(true, true);
         movingPlatforms.clear(true, true);
@@ -1167,14 +1249,24 @@ function showGameOver(scene) {
         finalScoreText.destroy();
         restartButton.destroy();
 
+        if (backgroundMusic && backgroundMusic.isPlaying) {
+            backgroundMusic.stop(); // veya .pause()
+            backgroundMusic.destroy(); // tekrar add edilebilmesi için
+            backgroundMusic = null;
+        }
+
         scene.scene.restart();
     });
+    scene.sound.play('gameOverSound');
 }
 
 function showVictoryScreen(scene) {
     scene.physics.pause();
     gameActive = false;
     victoryAchieved = true;
+
+    scene.sound.stopAll();
+    scene.sound.play('victorySound', { volume: 1, loop: false });
 
     player.clearTint();
 
@@ -1349,6 +1441,7 @@ function createInitialGround(scene) {
         handlePlatformCollision(player, platform, jumpPower + 200);
         
         if (platform.trampolineMat) {
+            scene.sound.play('jump');
             animateTrampoline(scene, platform);
         }
     });
@@ -1654,7 +1747,6 @@ function createStartScreen(scene) {
     button.setScrollFactor(0);
     button.setDepth(1001);
     startScreenElements.push(button);
-    
     // Animate button popping in
     scene.tweens.add({
         targets: button,
@@ -1705,10 +1797,8 @@ function createStartScreen(scene) {
             duration: 100
         });
         
-        // Play button click sound if you have it loaded
-        if (scene.sound.get('buttonClick')) {
-            scene.sound.play('buttonClick');
-        }
+        scene.sound.play('buttonClick');
+
     });
     
     button.on('pointerup', () => {
