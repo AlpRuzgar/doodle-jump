@@ -1115,7 +1115,6 @@ function showGameOver(scene) {
 
     // Restart functionality
     restartButton.on('pointerup', () => {
-        console.log("Restart butonuna tıklandı!");
         scene.sound.play('buttonClick', { volume: 0.5 });
         score = 0;
         playerHealth = 5;
