@@ -55,10 +55,27 @@ let victoryY = spaceThreshold - 8000;
 let victoryScreen;
 let victoryAchieved = false;
 let trophy;
+let gameOverSoundPlayed = false;
+let canPlayDamageSound = true;
 
 
-function preload() {
-    this.load.image('background', 'assets/background.png');
+
+function preload() { 
+
+    this.load.audio('jump', 'assets/sounds/jump.mp3');
+    this.load.audio('gameOverSound', 'assets/sounds/gameover.mp3');
+    this.load.audio('bulletFire', 'assets/sounds/bullet.mp3');
+    this.load.audio('coinSound', 'assets/sounds/coin.mp3');
+    this.load.audio('damageSound', 'assets/sounds/damage.mp3');
+    this.load.audio('backgroundMusic', 'assets/sounds/backgroundMusic.mp3');
+    this.load.audio('buttonClick', 'assets/sounds/buttonClick.mp3');
+    this.load.audio('victorySound', 'assets/sounds/win.mp3');
+
+    this.load.audio('alienSound', 'assets/sounds/alien.mp3');
+    this.load.audio('ufoSound', 'assets/sounds/ufo.mp3');
+    this.load.audio('birdSound', 'assets/sounds/bird.mp3');
+
+    //this.load.image('background', 'assets/background.png');
     this.load.image('platform', 'assets/platform.png');
     this.load.image('platformSpace', 'assets/platformSpace.png');
     this.load.image('movingPlatform', 'assets/movingPlatform.png');
@@ -100,6 +117,9 @@ function create() {
     background.setOrigin(0.5, 1);
     background.displayWidth = config.width;
     background.setScrollFactor(0.9);
+
+    let music = this.sound.add('backgroundMusic', { loop: true, volume: 0.5 });
+    music.play();
 
 
     normalPlatforms = this.physics.add.staticGroup();
@@ -167,6 +187,8 @@ function create() {
 
             handlePlatformCollision(player, platform, jumpPower);
 
+            this.sound.play('jump');
+
 
             this.tweens.add({
                 targets: platform,
@@ -207,6 +229,8 @@ function create() {
 
             handlePlatformCollision(player, platform, jumpPower);
 
+            this.sound.play('jump');
+
 
             this.tweens.add({
                 targets: platform,
@@ -245,6 +269,8 @@ function create() {
 
         if (player.body.velocity.y >= 0 && playerBottom <= platformTop + 5) {
             handlePlatformCollision(player, platform, jumpPower);
+
+            this.sound.play('jump');
 
 
             this.tweens.add({
@@ -424,6 +450,8 @@ function update() {
                 bird.body.moves = false;
                 bird.setImmovable(true);
 
+                this.sound.play('birdSound');
+
                 enemies.add(bird);
 
                 let movementDistance = Phaser.Math.Between(100, 200);
@@ -455,7 +483,7 @@ function update() {
 
     // alien
     if (gameActive && inSpaceStage && player.y - config.height > victoryY) {
-        if (Phaser.Math.Between(1, 200) === 1) {
+        if (Phaser.Math.Between(1, 200) === 1) {   
             let x = Phaser.Math.Between(100, config.width - 100);
             let y = player.y - 900;
 
@@ -478,6 +506,8 @@ function update() {
                 alien.body.moves = false;
                 alien.setImmovable(true);
 
+                this.sound.play('alienSound');
+                
                 this.tweens.add({
                     targets: alien,
                     y: y - 10,
@@ -514,6 +544,7 @@ function update() {
                                 bullet.body.velocity.x = Math.cos(angle) * bulletSpeed;
                                 bullet.body.velocity.y = Math.sin(angle) * bulletSpeed;
                                 bullet.setAngle(Phaser.Math.RadToDeg(angle) - 90);
+                                this.sound.play('bulletFire');
 
 
                             }
@@ -561,6 +592,8 @@ function update() {
                 ufo.body.allowGravity = false;
                 ufo.body.moves = false;
                 ufo.setImmovable(true);
+
+                this.sound.play('ufoSound');
 
                 this.tweens.add({
                     targets: ufo,
@@ -687,6 +720,8 @@ function collectCoin(player, coin) {
     coin.destroy();
     score += 10;
     scoreText.setText(score.toString());
+
+    this.sound.play('coinSound');
 
     console.log('Coin collected! Score: ' + score);
 }
@@ -923,6 +958,17 @@ function handleEnemyCollision(player, enemy) {
 function handleBulletCollision(player, bullet) {
 
     bullet.destroy();
+
+    if (canPlayDamageSound) {
+        this.sound.play('damageSound');
+        canPlayDamageSound = false;
+
+        // Örneğin 300ms sonra yeniden ses çalabilsin.
+        this.time.delayedCall(300, () => {
+            canPlayDamageSound = true;
+        });
+    }
+
     playerHealth--;
 
     let lastHealthPoint = healthPoints.getChildren()[healthPoints.getChildren().length - 1];
@@ -953,6 +999,9 @@ function handleBulletCollision(player, bullet) {
 }
 
 function showGameOver(scene) {
+
+    if (gameOverSoundPlayed) return; // Eğer zaten çalıştıysa, tekrar çalışmasın
+    gameOverSoundPlayed = true;
 
     scene.physics.pause();
     scene.tweens.pauseAll();
@@ -1030,6 +1079,7 @@ function showGameOver(scene) {
             strokeThickness: 3
         }
     );
+    scene.sound.stopAll();
     finalScoreText.setOrigin(0.5);
     finalScoreText.setScrollFactor(0);
     finalScoreText.setDepth(1000);
@@ -1065,7 +1115,8 @@ function showGameOver(scene) {
 
     // Restart functionality
     restartButton.on('pointerup', () => {
-
+        console.log("Restart butonuna tıklandı!");
+        scene.sound.play('buttonClick', { volume: 0.5 });
         score = 0;
         playerHealth = 5;
         gameActive = true;
@@ -1073,6 +1124,8 @@ function showGameOver(scene) {
         inSpaceStage = false;
         lastPlatformY = 700;
         lastY = 0;
+
+        gameOverSoundPlayed = false;
 
         normalPlatforms.clear(true, true);
         movingPlatforms.clear(true, true);
@@ -1088,12 +1141,16 @@ function showGameOver(scene) {
 
         scene.scene.restart();
     });
+    scene.sound.play('gameOverSound');
 }
 
 function showVictoryScreen(scene) {
     scene.physics.pause();
     gameActive = false;
     victoryAchieved = true;
+
+    scene.sound.stopAll();
+    scene.sound.play('victorySound', { volume: 1, loop: false });
 
     player.clearTint();
 
@@ -1282,3 +1339,5 @@ function createUI() {
         healthPoints.add(healthPoint);
     }
 }
+
+
