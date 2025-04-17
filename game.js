@@ -54,7 +54,7 @@ let victoryY = spaceThreshold - 8800;
 let victoryScreen;
 let victoryAchieved = false;
 let trophy;
-let maxFallDistance = config.height * 0.8; 
+let maxFallDistance = config.height * 0.8;
 let highestPlayerY = 0;
 let startScreenActive = true;
 let startScreenElements = [];
@@ -93,6 +93,7 @@ function preload() {
     this.load.image('restartButtonSpace', 'assets/ui/restart_button_space.png');
     this.load.image('victoryTextSpace', 'assets/ui/victory_text_space.png');
     this.load.image('startButton', 'assets/ui/start_button.png');
+    this.load.image('howToButton', 'assets/ui/howTo_button.png');
 
     //Sesler
     this.load.audio('jump', 'assets/sounds/jump.mp3');
@@ -122,18 +123,18 @@ function create() {
     background.setOrigin(0.5, 1);
     background.displayWidth = config.width;
     background.setScrollFactor(0.9);
-    let groundColor = 0x3D2314; 
+    let groundColor = 0x3D2314;
     let groundBelowTrampoline = this.add.rectangle(
-    config.width / 2,            
-    config.height,              
-    config.width,               
-    500,                        
-    groundColor                  
+        config.width / 2,
+        config.height,
+        config.width,
+        500,
+        groundColor
     );
-    groundBelowTrampoline.setOrigin(0.5, 0);  
-    groundBelowTrampoline.setScrollFactor(0.9); 
-    groundBelowTrampoline.setDepth(-1);     
-    
+    groundBelowTrampoline.setOrigin(0.5, 0);
+    groundBelowTrampoline.setScrollFactor(0.9);
+    groundBelowTrampoline.setDepth(-1);
+
     if (!backgroundMusic) {
         backgroundMusic = this.sound.add('backgroundMusic', { loop: true, volume: 0.5 });
         backgroundMusic.play();
@@ -249,7 +250,7 @@ function create() {
             handlePlatformCollision(player, platform, jumpPower);
             animatePlayerLanding(this, player);
             this.sound.play('jump');
-            
+
             this.tweens.add({
                 targets: platform,
                 y: platform.y + 15,
@@ -373,7 +374,7 @@ function create() {
         this.children.list.forEach(child => {
             if (child.texture &&
                 (child.texture.key === 'scorePanel' ||
-                 child.texture.key === 'healthBar')) {
+                    child.texture.key === 'healthBar')) {
                 child.setVisible(true);
             }
         });
@@ -387,17 +388,17 @@ function update() {
     }
     let cameraTopY = this.cameras.main.scrollY;
     let cameraBottomY = cameraTopY + config.height;
-    
+
     handlePlayerMovement();
     adjustCameraDeadzone.call(this);
-    
+
     inSpaceStage = checkSpaceStage(player.y);
-    
+
     // Platform generation
     const cameraTop = this.cameras.main.scrollY;
     const visibleHeight = this.cameras.main.height;
     const generationThreshold = cameraTop - visibleHeight * 0.5;
-    
+
     if (lastPlatformY > generationThreshold && cameraTop - 200 < lastPlatformY && player.y - config.height - 200 > victoryY) {
         let platformType = Phaser.Math.Between(1, 10);
         if (platformType <= 6) {
@@ -410,12 +411,12 @@ function update() {
             addBreakingPlatform(this);
             lastPlatformType = "breaking";
         }
-        
+
         if (Phaser.Math.Between(1, 10) <= 2) {
             addCoin(this);
         }
     }
-    
+
     // Camera follow logic for jumping and falling
     if (player.body.velocity.y < 0) {
         // Player is jumping upward
@@ -425,7 +426,7 @@ function update() {
             targetY,
             0.05
         );
-        
+
         // Update the highest camera position
         if (this.cameras.main.scrollY < lastY) {
             lastY = this.cameras.main.scrollY;
@@ -435,13 +436,13 @@ function update() {
         // Calculate how far down the camera can go (30% of screen height)
         const maxDownwardOffset = config.height * 0.3;
         const lowestAllowedY = lastY - maxDownwardOffset;
-        
+
         // Calculate target position - keep player in upper part of screen
         const targetY = Math.max(
             lowestAllowedY,
             player.y - config.height * 0.7
         );
-        
+
         // Smoothly move camera to the target position
         this.cameras.main.scrollY = Phaser.Math.Linear(
             this.cameras.main.scrollY,
@@ -449,23 +450,23 @@ function update() {
             0.03
         );
     }
-    
+
     // Fall detection - unified and reliable
     if (gameActive) {
         // Track highest point reached (only when not touching platforms)
         if (player.y < highestPlayerY || highestPlayerY === 0) {
             highestPlayerY = player.y;
         }
-        
+
         // Reset highest point when player is on a platform
         if (player.body.touching.down) {
             // When player lands on any platform, reset the highest point
             highestPlayerY = player.y;
         }
-        
+
         // Get current fall distance
         const currentFallDistance = player.y - highestPlayerY;
-        
+
         // Check if player has fallen too far from highest point
         // Only trigger game over when player is actually falling (positive y velocity) 
         // and has exceeded the maximum fall distance
@@ -473,7 +474,7 @@ function update() {
             // Trigger game over
             gameActive = false;
             this.physics.pause();
-            
+
             this.tweens.add({
                 targets: player,
                 angle: 180,
@@ -484,20 +485,20 @@ function update() {
                 }
             });
         }
-        
+
         // Check if player has fallen below the trampoline/ground
         const trampolineY = config.height - 300;
         if (player.y > trampolineY + 50) {
             // Stop camera from following player down
             this.cameras.main.stopFollow();
-            
+
             // Keep camera at the ground level
-            this.cameras.main.scrollY = trampolineY - config.height/2;
-            
+            this.cameras.main.scrollY = trampolineY - config.height / 2;
+
             // Immediately pause physics to stop further falling
             this.physics.pause();
             gameActive = false;
-            
+
             this.tweens.add({
                 targets: player,
                 angle: 180,
@@ -509,7 +510,7 @@ function update() {
             });
         }
     }
-    
+
 
     // bird
 
@@ -521,7 +522,7 @@ function update() {
 
 
     // alien
-    if (gameActive && inSpaceStage && player.y - config.height > victoryY ) {
+    if (gameActive && inSpaceStage && player.y - config.height > victoryY) {
         if (Phaser.Math.Between(1, 200) === 1) {
             spawnAlien(this);
         }
@@ -541,7 +542,7 @@ function adjustCameraDeadzone() {
     if (player.body.velocity.y < 0) {
         const currentOffset = this.cameras.main.followOffset.y;
         const targetOffset = config.height * 2 / 10;
-        
+
         this.cameras.main.setFollowOffset(
             0,
             Phaser.Math.Linear(currentOffset, targetOffset, 0.03)
@@ -1397,49 +1398,49 @@ function createInitialGround(scene) {
 
     let trampolineFrame = scene.add.image(config.width / 2, config.height - 300, 'ground');
     trampolineFrame.setScale(2);
-    trampolineFrame.setDepth(1); 
+    trampolineFrame.setDepth(1);
 
     let trampolineMat = scene.add.image(config.width / 2, config.height - 300, 'ground');
     trampolineMat.setScale(2);
-    trampolineMat.setDepth(0); 
-    
+    trampolineMat.setDepth(0);
+
     let graphics = scene.make.graphics();
     graphics.fillStyle(0xffffff);
-    
+
     let trampolineWidth = trampolineMat.width * trampolineMat.scaleX;
     let trampolineHeight = trampolineMat.height * trampolineMat.scaleY;
-    
+
     graphics.fillEllipse(
         trampolineMat.x,
         trampolineMat.y,
-        trampolineWidth * 0.6, 
-        trampolineHeight * 0.3  
+        trampolineWidth * 0.6,
+        trampolineHeight * 0.3
     );
-    
+
     let mask = graphics.createGeometryMask();
     trampolineMat.setMask(mask);
-    
+
     let startGround = ground.create(config.width / 2, config.height - 300, 'ground');
     startGround.setScale(2);
-    startGround.setAlpha(0); 
-    
+    startGround.setAlpha(0);
+
     startGround.body.checkCollision.up = true;
     startGround.body.checkCollision.down = false;
     startGround.body.checkCollision.left = false;
     startGround.body.checkCollision.right = false;
-    
+
     startGround.body.setSize(startGround.width * 0.9, startGround.height * 0.1);
     startGround.body.setOffset(startGround.width * 0.05, 0);
-    
+
     startGround.refreshBody();
-    
+
     startGround.trampolineMat = trampolineMat;
     startGround.originalMatY = trampolineMat.y;
-    
+
     scene.physics.add.collider(player, ground, (player, platform) => {
 
         handlePlatformCollision(player, platform, jumpPower + 200);
-        
+
         if (platform.trampolineMat) {
             scene.sound.play('jump');
             animateTrampoline(scene, platform);
@@ -1449,14 +1450,14 @@ function createInitialGround(scene) {
 
 function animateTrampoline(scene, platform) {
     if (!platform.trampolineMat) return;
-    
+
     const mat = platform.trampolineMat;
     const originalY = platform.originalMatY;
-    
+
     scene.tweens.add({
         targets: mat,
         y: originalY + 30,
-        scaleY: mat.scaleY * 0.6, 
+        scaleY: mat.scaleY * 0.6,
         duration: 150,
         ease: 'Quad.easeOut',
         onComplete: () => {
@@ -1478,8 +1479,8 @@ function animateTrampoline(scene, platform) {
             });
         }
     });
-    
-  
+
+
 }
 
 function createUI() {
@@ -1530,24 +1531,24 @@ function animatePlayerLanding(scene, player) {
 
     scene.tweens.add({
         targets: player,
-        scaleX: player.scaleX * 1.01, 
-        scaleY: player.scaleY * 0.7, 
+        scaleX: player.scaleX * 1.01,
+        scaleY: player.scaleY * 0.7,
         duration: 120,
         ease: 'Quad.easeOut',
         onComplete: () => {
-      
+
             scene.tweens.add({
                 targets: player,
-                scaleX: player.scaleX * 0.9, 
-                scaleY: player.scaleY * 1.3,  
+                scaleX: player.scaleX * 0.9,
+                scaleY: player.scaleY * 1.3,
                 duration: 150,
                 ease: 'Back.easeOut',
                 onComplete: () => {
                     // Return to original scale
                     scene.tweens.add({
                         targets: player,
-                        scaleX: 0.35,  
-                        scaleY: 0.35,  
+                        scaleX: 0.35,
+                        scaleY: 0.35,
                         duration: 100,
                         ease: 'Sine.easeInOut'
                     });
@@ -1558,41 +1559,41 @@ function animatePlayerLanding(scene, player) {
 }
 
 function createStartScreen(scene) {
-    
+
     let overlay = scene.add.rectangle(
         config.width / 2,
         config.height / 2,
         config.width,
         config.height,
-        0x2ABED9, 
+        0x2ABED9,
         0
     );
     overlay.setScrollFactor(0);
     overlay.setDepth(1000);
     startScreenElements.push(overlay);
-    
+
     // Fade in the overlay
     scene.tweens.add({
         targets: overlay,
-        alpha: 0.75, 
+        alpha: 0.75,
         duration: 800,
         ease: 'Power2'
     });
-    
+
     // Add a slight gradient effect with another rectangle
     let gradientOverlay = scene.add.rectangle(
         config.width / 2,
         config.height / 2,
         config.width,
         config.height,
-        0x0AFFFF, 
+        0x0AFFFF,
         0
     );
     gradientOverlay.setScrollFactor(0);
     gradientOverlay.setDepth(1000);
     gradientOverlay.setAlpha(0);
     startScreenElements.push(gradientOverlay);
-    
+
     // Fade in the gradient with a different timing
     scene.tweens.add({
         targets: gradientOverlay,
@@ -1600,29 +1601,29 @@ function createStartScreen(scene) {
         duration: 1200,
         ease: 'Sine.InOut'
     });
-    
+
     // Hide the actual player and UI elements
     if (player) player.setVisible(false);
     if (scoreText) scoreText.setVisible(false);
     if (healthPoints) {
-        healthPoints.children.each(function(point) {
+        healthPoints.children.each(function (point) {
             point.setVisible(false);
         });
     }
-    
+
     // Hide UI elements
     scene.children.list.forEach(child => {
-        if (child.texture && 
-            (child.texture.key === 'scorePanel' || 
-             child.texture.key === 'healthBar')) {
+        if (child.texture &&
+            (child.texture.key === 'scorePanel' ||
+                child.texture.key === 'healthBar')) {
             child.setVisible(false);
         }
     });
-    
+
     // Title with animation
     let title = scene.add.text(
         config.width / 2,
-        config.height * 0.2, 
+        config.height * 0.2,
         'OYUN ADI',
         {
             fontSize: '48px',
@@ -1635,37 +1636,37 @@ function createStartScreen(scene) {
     title.setOrigin(0.5);
     title.setScrollFactor(0);
     title.setDepth(1001);
-    title.setAlpha(0);  
+    title.setAlpha(0);
     startScreenElements.push(title);
-    
+
     // Animate title dropping in
     scene.tweens.add({
         targets: title,
-        y: config.height * 0.3,  
+        y: config.height * 0.3,
         alpha: 1,
         duration: 1000,
         ease: 'Bounce.Out',
         delay: 300
     });
-    
+
     // Add 5 platforms that start at the bottom and move upward
     for (let i = 0; i < 5; i++) {
         // Spread platforms horizontally
         let x = config.width * (0.2 + 0.15 * i);
         // All start from below the screen
         let y = config.height + 50 + (i * 30);
-        
+
         let platform = scene.add.image(x, y, 'platform');
         platform.setScale(120 / platform.width, 42 / platform.height);
         platform.setScrollFactor(0);
         platform.setDepth(1001);
         startScreenElements.push(platform);
-        
+
         // Animate platform moving up continuously
         scene.tweens.add({
             targets: platform,
-            y: -100, 
-            duration: 12000 + i * 1000, 
+            y: -100,
+            duration: 12000 + i * 1000,
             ease: 'Linear',
             delay: i * 1200, // Staggered start
             loop: -1, // Loop forever
@@ -1676,7 +1677,7 @@ function createStartScreen(scene) {
                 target.x = Phaser.Math.Between(50, config.width - 50);
             }
         });
-        
+
         // Add a slight horizontal wobble
         scene.tweens.add({
             targets: platform,
@@ -1688,15 +1689,15 @@ function createStartScreen(scene) {
             delay: i * 500
         });
     }
-    
+
     // Add a bouncing character
     let demoPlayer = scene.add.image(config.width / 2, config.height - 200, 'player');
     demoPlayer.setScale(0.35);
     demoPlayer.setScrollFactor(0);
     demoPlayer.setDepth(1001);
-    demoPlayer.setAlpha(0);  
+    demoPlayer.setAlpha(0);
     startScreenElements.push(demoPlayer);
-    
+
     // Fade in player
     scene.tweens.add({
         targets: demoPlayer,
@@ -1705,7 +1706,7 @@ function createStartScreen(scene) {
         delay: 1800,
         ease: 'Sine.InOut'
     });
-    
+
     // Make player bounce
     scene.tweens.add({
         targets: demoPlayer,
@@ -1736,28 +1737,30 @@ function createStartScreen(scene) {
             });
         }
     });
-    
+
+    let isPopupOpen = false;
+
     // Start button with animation
     let button = scene.add.image(
         config.width / 2,
-        config.height * 0.6 + 50,  
-        'startButton' 
+        config.height * 0.6 + 50,
+        'startButton'
     );
-    button.setScale(0);  
+    button.setScale(0);
     button.setScrollFactor(0);
     button.setDepth(1001);
     startScreenElements.push(button);
     // Animate button popping in
     scene.tweens.add({
         targets: button,
-        scale: 0.4, 
-        y: config.height * 0.6,  
+        scale: 0.4,
+        y: config.height * 0.6,
         duration: 800,
         delay: 2000,
         ease: 'Back.Out',
         onComplete: () => {
-            button.setInteractive();  
-            
+            button.setInteractive();
+
             // Add continuous bounce effect
             scene.tweens.add({
                 targets: button,
@@ -1769,7 +1772,7 @@ function createStartScreen(scene) {
             });
         }
     });
-    
+
     // Button hover effects
     button.on('pointerover', () => {
         scene.tweens.add({
@@ -1779,7 +1782,7 @@ function createStartScreen(scene) {
         });
         button.setTint(0xccccff);
     });
-    
+
     button.on('pointerout', () => {
         scene.tweens.add({
             targets: button,
@@ -1788,7 +1791,7 @@ function createStartScreen(scene) {
         });
         button.clearTint();
     });
-    
+
     // Click effect and start game
     button.on('pointerdown', () => {
         scene.tweens.add({
@@ -1796,12 +1799,15 @@ function createStartScreen(scene) {
             scale: 0.35,
             duration: 100
         });
-        
+
         scene.sound.play('buttonClick');
 
     });
-    
+
     button.on('pointerup', () => {
+        if (isPopupOpen) return; // zaten açıksa işlem yapma
+
+        isPopupOpen = true;
         // Play a satisfying zoom effect on all elements
         scene.tweens.add({
             targets: startScreenElements,
@@ -1812,38 +1818,159 @@ function createStartScreen(scene) {
             onComplete: () => {
                 startScreenActive = false;
                 gameActive = true;
-                
+
                 // Show the actual player and UI elements
                 if (player) {
                     player.setVisible(true);
                 }
-                
+
                 if (scoreText) scoreText.setVisible(true);
                 if (healthPoints) {
-                    healthPoints.children.each(function(point) {
+                    healthPoints.children.each(function (point) {
                         point.setVisible(true);
                     });
                 }
-                
+
                 // Show UI elements
                 scene.children.list.forEach(child => {
-                    if (child.texture && 
-                        (child.texture.key === 'scorePanel' || 
-                         child.texture.key === 'healthBar')) {
+                    if (child.texture &&
+                        (child.texture.key === 'scorePanel' ||
+                            child.texture.key === 'healthBar')) {
                         child.setVisible(true);
                     }
                 });
-                
+
                 // Add a slight delay to ensure all elements are properly shown
                 scene.time.delayedCall(100, () => {
                     // Force show the player again (extra safety)
                     if (player) player.setVisible(true);
                 });
-                
+
                 // Remove start screen elements
                 startScreenElements.forEach(element => element.destroy());
                 startScreenElements = [];
             }
+        });
+    });
+
+    // "Nasıl Oynanır" butonu
+    let howToPlayButton = scene.add.image(
+        config.width / 2,
+        config.height * 0.6 + 300,
+        'howToButton',
+    );
+    howToPlayButton.setScale(0);
+    howToPlayButton.setOrigin(0.5);
+    howToPlayButton.setScrollFactor(0);
+    howToPlayButton.setDepth(1001);
+    howToPlayButton.setInteractive();
+    startScreenElements.push(howToPlayButton);
+
+    scene.tweens.add({
+        targets: howToPlayButton,
+        scale: 0.1,
+        y: config.height * 0.6 + 300,
+        duration: 800,
+        delay: 2000,
+        ease: 'Back.Out',
+        onComplete: () => {
+            howToPlayButton.setInteractive();
+
+            // Add continuous bounce effect
+            scene.tweens.add({
+                targets: howToPlayButton,
+                scale: 0.15,
+                duration: 1000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.InOut'
+            });
+        }
+    });
+
+    // Button hover effects
+    howToPlayButton.on('pointerover', () => {
+        scene.tweens.add({
+            targets: howToPlayButton,
+            scale: 0.15,
+            duration: 100
+        });
+        howToPlayButton.setTint(0xccccff);
+    });
+
+    howToPlayButton.on('pointerout', () => {
+        scene.tweens.add({
+            targets: howToPlayButton,
+            scale: 0.12,
+            duration: 100
+        });
+        howToPlayButton.clearTint();
+    });
+
+    // Click effect and start game
+    howToPlayButton.on('pointerdown', () => {
+        scene.tweens.add({
+            targets: howToPlayButton,
+            scale: 0.08,
+            duration: 100
+        });
+
+        scene.sound.play('buttonClick');
+    });
+
+    howToPlayButton.on('pointerup', () => {
+        if (isPopupOpen) return; // zaten açıksa işlem yapma
+
+        isPopupOpen = true;
+
+        let popupBg = scene.add.rectangle(
+            config.width / 2,
+            config.height / 2,
+            config.width * 0.9,
+            config.height * 0.6,
+            0x000000,
+            0.85
+        );
+        popupBg.setScrollFactor(0);
+        popupBg.setDepth(2000);
+
+        let howToPlayText = scene.add.text(
+            config.width / 2,
+            config.height / 2,
+            'hoşça kalın gidiom bne',
+            {
+                fontSize: '22px',
+                fontFamily: 'monospace',
+                fill: '#ffffff',
+                align: 'center',
+                wordWrap: { width: config.width * 0.8 }
+            }
+        ).setOrigin(0.5);
+        howToPlayText.setScrollFactor(0);
+        howToPlayText.setDepth(2001);
+
+        let closeText = scene.add.text(
+            config.width / 2,
+            config.height / 2 + 180,
+            'Kapat',
+            {
+                fontSize: '24px',
+                fontFamily: 'monospace',
+                fill: '#ff6666',
+                backgroundColor: '#ffffff',
+                padding: { x: 12, y: 5 }
+            }
+        );
+        closeText.setOrigin(0.5);
+        closeText.setInteractive();
+        closeText.setScrollFactor(0);
+        closeText.setDepth(2002);
+
+        closeText.on('pointerup', () => {
+            isPopupOpen = false;
+            popupBg.destroy();
+            howToPlayText.destroy();
+            closeText.destroy();
         });
     });
 }
