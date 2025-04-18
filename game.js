@@ -182,12 +182,17 @@ function create() {
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     if (isTouchDevice) {
-        this.input.on('pointermove', function (pointer) {
-            if (!player || !gameActive) return;
-
-            // Parmağın X konumuna göre karakterin pozisyonunu ayarla
-            player.x = Phaser.Math.Clamp(pointer.x, 0, config.width);
-        }, this);
+        this.input.on('pointerdown', function (pointer) {
+            if (pointer.x < config.width / 2) {
+                touchDirection = 'left';
+            } else {
+                touchDirection = 'right';
+            }
+        });
+        
+        this.input.on('pointerup', function () {
+            touchDirection = null;
+        });
     }
 
     // Trophy'yi victoryY konumuna yerleştir
@@ -389,6 +394,7 @@ function update() {
     let cameraBottomY = cameraTopY + config.height;
     
     handlePlayerMovement();
+    handleMobileControls();
     adjustCameraDeadzone.call(this);
     
     inSpaceStage = checkSpaceStage(player.y);
@@ -648,6 +654,26 @@ function handlePlayerMovement() {
     } else if (player.x > config.width) {
         player.x = 0;
     }
+}
+
+function handleMobileControls() {
+    if (touchDirection === 'left') {
+        player.setVelocityX(-500);
+        player.flipX = true;
+    } else if (touchDirection === 'right') {
+        player.setVelocityX(500);
+        player.flipX = false;
+    } else {
+        player.setVelocityX(0);
+    }
+
+    if (player.x < 0) {
+        player.x = config.width;
+    }
+    else if (player.x > config.width) {
+        player.x = 0;
+    }
+    
 }
 
 
@@ -1232,6 +1258,7 @@ function showGameOver(scene) {
         lastPlatformY = 700;
         lastY = 0;
         highestPlayerY = 0;
+        touchDirection = null;
 
         startScreenActive = false;
 
