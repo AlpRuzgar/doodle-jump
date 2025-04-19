@@ -25,6 +25,8 @@ const config = {
 const game = new Phaser.Game(config);
 const DEBUG_COLLISIONS = false;
 let cursors;
+let touchDirection = null;
+let isTouchDevice = false;
 let normalPlatforms;
 let movingPlatforms;
 let breakingPlatforms;
@@ -180,7 +182,7 @@ function create() {
 
     //mobil kontroller
     //mobil cihaz kontrolü
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     if (isTouchDevice) {
         this.input.on('pointerdown', function (pointer) {
@@ -393,9 +395,13 @@ function update() {
     }
     let cameraTopY = this.cameras.main.scrollY;
     let cameraBottomY = cameraTopY + config.height;
-
+    
     handlePlayerMovement();
-    handleMobileControls();
+
+    if (isTouchDevice) {
+        handleMobileControls();
+    }
+
     adjustCameraDeadzone.call(this);
 
     inSpaceStage = checkSpaceStage(player.y);
@@ -656,6 +662,7 @@ function handlePlayerMovement() {
         player.x = 0;
     }
 }
+
 
 function handleMobileControls() {
     if (touchDirection === 'left') {
@@ -1376,6 +1383,7 @@ function showVictoryScreen(scene) {
         lastPlatformY = 700;
         lastY = 0;
         highestPlayerY = 0;
+        touchDirection = null;
 
         normalPlatforms.clear(true, true);
         movingPlatforms.clear(true, true);
