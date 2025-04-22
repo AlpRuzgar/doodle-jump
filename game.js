@@ -67,6 +67,12 @@ let backgroundMusic;
 
 function preload() {
     this.load.image('background', 'assets/background.png');
+    this.load.image('background5', 'assets/background/image1x5.png');
+    this.load.image('background4', 'assets/background/image1x4.png');
+    this.load.image('background3', 'assets/background/image1x3.png');
+    this.load.image('background2', 'assets/background/image1x2.png');
+    this.load.image('background1', 'assets/background/image1x1.png');
+
     this.load.image('platform', 'assets/platform.png');
     this.load.image('platformSpace', 'assets/platformSpace.png');
     this.load.image('movingPlatform', 'assets/movingPlatform.png');
@@ -121,10 +127,12 @@ function create() {
     coins = this.physics.add.group({ allowGravity: false, immovable: true });
 
     //arka plan oluşturma
-    let background = this.add.image(config.width / 2, config.height, 'background');
-    background.setOrigin(0.5, 1);
-    background.displayWidth = config.width;
-    background.setScrollFactor(0.9);
+    addBackground(this, config.width / 2, config.height, 'background5');
+    addBackground(this, config.width / 2, config.height - 1 * (13200 / 5), 'background4');
+    addBackground(this, config.width / 2, config.height - 2 * (13200 / 5), 'background3');
+    addBackground(this, config.width / 2, config.height - 3 * (13200 / 5), 'background2');
+    addBackground(this, config.width / 2, config.height - 4 * (13200 / 5), 'background1');
+
     let groundColor = 0x3D2314;
     let groundBelowTrampoline = this.add.rectangle(
         config.width / 2,
@@ -192,7 +200,7 @@ function create() {
                 touchDirection = 'right';
             }
         });
-        
+
         this.input.on('pointerup', function () {
             touchDirection = null;
         });
@@ -395,7 +403,7 @@ function update() {
     }
     let cameraTopY = this.cameras.main.scrollY;
     let cameraBottomY = cameraTopY + config.height;
-    
+
     handlePlayerMovement();
 
     if (isTouchDevice) {
@@ -550,6 +558,14 @@ function update() {
 
 }
 
+function addBackground(scene, x, y, texture) {
+    let background = scene.add.image(x, y, texture);
+    background.setOrigin(0.5, 1);
+    background.displayWidth = config.width;
+    background.setScrollFactor(0.9);
+    background.setDepth(-1);
+}
+
 function adjustCameraDeadzone() {
     if (player.body.velocity.y < 0) {
         const currentOffset = this.cameras.main.followOffset.y;
@@ -681,7 +697,7 @@ function handleMobileControls() {
     else if (player.x > config.width) {
         player.x = 0;
     }
-    
+
 }
 
 
