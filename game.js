@@ -52,7 +52,7 @@ let healthText;
 let enemies;
 let cloudSpawnThreshold = -(10000 * 0.01);
 let gameOverScreen;
-let victoryY = spaceThreshold - 8800;
+let victoryY = spaceThreshold - 7800;
 let victoryScreen;
 let victoryAchieved = false;
 let trophy;
@@ -63,6 +63,13 @@ let startScreenElements = [];
 let gameOverSoundPlayed = false;
 let canPlayDamageSound = true;
 let backgroundMusic;
+let canPlayBirdSound = true;
+let canPlayAlienSound = true;
+let canPlayUfoSound = true;
+let isMuted = false;
+let soundToggleButton;
+
+
 
 
 function preload() {
@@ -96,6 +103,9 @@ function preload() {
     this.load.image('victoryTextSpace', 'assets/ui/victory_text_space.png');
     this.load.image('startButton', 'assets/ui/start_button.png');
     this.load.image('howToButton', 'assets/ui/howTo_button.png');
+    this.load.image('soundOn', 'assets/ui/sound_on.png');
+    this.load.image('soundOff', 'assets/ui/sound_off.png');
+
 
     //Sesler
     this.load.audio('jump', 'assets/sounds/jump.mp3');
@@ -940,7 +950,15 @@ function spawnBird(scene) {
     bird.body.moves = false;
     bird.setImmovable(true);
 
-    scene.sound.play('birdSound');
+    if (canPlayBirdSound) {
+        scene.sound.play('birdSound');
+        canPlayBirdSound = false;
+    
+        // 3 saniye sonra tekrar ses çalınabilir
+        scene.time.delayedCall(3000, () => {
+            canPlayBirdSound = true;
+        });
+    }
 
     let movementDistance = Phaser.Math.Between(100, 200);
     let movingRight = movementDistance > 0;
@@ -988,7 +1006,15 @@ function spawnAlien(scene) {
         alien.body.moves = false;
         alien.setImmovable(true);
 
-        scene.sound.play('alienSound');
+        if (canPlayAlienSound) {
+            scene.sound.play('alienSound');
+            canPlayAlienSound = false;
+        
+            scene.time.delayedCall(3000, () => {
+                canPlayAlienSound = true;
+            });
+        }
+        
 
         scene.tweens.add({
             targets: alien,
@@ -1073,7 +1099,15 @@ function spawnUFO(scene) {
         ufo.body.moves = false;
         ufo.setImmovable(true);
 
-        scene.sound.play('ufoSound');
+        if (canPlayUfoSound) {
+            scene.sound.play('ufoSound');
+            canPlayUfoSound = false;
+        
+            scene.time.delayedCall(3000, () => {
+                canPlayUfoSound = true;
+            });
+        }
+        
 
         scene.tweens.add({
             targets: ufo,
@@ -1560,6 +1594,28 @@ function createUI() {
         healthPoint.setDepth(1001);
         healthPoints.add(healthPoint);
     }
+        // Ses aç/kapa butonu
+        soundToggleButton = this.add.image(config.width - 40, 100, 'soundOn');
+        soundToggleButton.setScale(0.1);
+        soundToggleButton.setScrollFactor(0);
+        soundToggleButton.setDepth(1001);
+        soundToggleButton.setInteractive();
+
+        soundToggleButton.on('pointerdown', () => {
+         isMuted = !isMuted;
+
+         if (isMuted) {
+        soundToggleButton.setTexture('soundOff');
+        // Tüm sesleri sustur
+        game.sound.mute = true;
+        } else {
+        soundToggleButton.setTexture('soundOn');
+        // Sesleri aç
+        game.sound.mute = false;
+    }
+});
+
+    
 }
 
 function animatePlayerLanding(scene, player) {
