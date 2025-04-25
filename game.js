@@ -777,12 +777,12 @@ function addNormalPlatform(scene) {
 
         platform.setAlpha(0.8);
 
-
+/*
         let glow = scene.add.image(platform.x, platform.y, platformTexture);
         glow.setScale(160 / glow.width, 160 / glow.height);
         glow.setAlpha(0.3);
         glow.setDepth(platform.depth - 1);
-
+*/
 
         scene.tweens.add({
             targets: platform,
@@ -841,12 +841,12 @@ function addMovingPlatform(scene) {
         movingPlatform.setAlpha(0.8);
 
 
-
+/*
         let glow = scene.add.image(movingPlatform.x, movingPlatform.y, platformTexture);
         glow.setScale(160 / glow.width, 160 / glow.height);
         glow.setAlpha(0.9);
         glow.setDepth(movingPlatform.depth - 1);
-
+*/
         scene.tweens.add({
             targets: movingPlatform,
             alpha: 0.7,
@@ -894,11 +894,12 @@ function addBreakingPlatform(scene) {
     if (inSpaceStage) {
         breakingPlatform.setAlpha(0.8);
 
-
+/*
         let glow = scene.add.image(breakingPlatform.x, breakingPlatform.y, platformTexture);
         glow.setScale(160 / glow.width, 160 / glow.height);
         glow.setAlpha(0.3);
         glow.setDepth(breakingPlatform.depth - 1);
+*/
     }
 
 
