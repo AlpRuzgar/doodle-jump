@@ -109,6 +109,7 @@ function preload() {
     this.load.image('victoryTextSpace', 'assets/ui/victory_text_space.png');
     this.load.image('startButton', 'assets/ui/start_button.png');
     this.load.image('howToButton', 'assets/ui/howTo_button.png');
+    this.load.image('title', 'assets/ui/title.png');
     this.load.image('soundOn', 'assets/ui/sound_on.png');
     this.load.image('soundOff', 'assets/ui/sound_off.png');
 
@@ -143,7 +144,7 @@ function create() {
     addBackground(this, config.width / 2, config.height - 3 * (13200 / 5), 'background2');
     addBackground(this, config.width / 2, config.height - 4 * (13200 / 5), 'background1');
 
-    let groundColor = 0x3D2314;
+    let groundColor = 0x3e2022;
     let groundBelowTrampoline = this.add.rectangle(
         config.width / 2,
         config.height,
@@ -1728,34 +1729,31 @@ function createStartScreen(scene) {
         }
     });
 
-    // Title with animation
-    let title = scene.add.text(
-        config.width / 2,
-        config.height * 0.2,
-        'OYUN ADI',
-        {
-            fontSize: '48px',
-            fontFamily: 'monospace',
-            fill: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 4
-        }
-    );
-    title.setOrigin(0.5);
-    title.setScrollFactor(0);
-    title.setDepth(1001);
-    title.setAlpha(0);
-    startScreenElements.push(title);
 
-    // Animate title dropping in
-    scene.tweens.add({
-        targets: title,
-        y: config.height * 0.3,
-        alpha: 1,
-        duration: 1000,
-        ease: 'Bounce.Out',
-        delay: 300
-    });
+// Title with animation
+// Replace text with image
+let title = scene.add.image(
+    config.width / 2,
+    config.height * 0.2,
+    'title' 
+);
+title.setOrigin(0.5);
+title.setScrollFactor(0);
+title.setDepth(1001);
+title.setAlpha(0);
+title.setScale(0.6);
+startScreenElements.push(title);
+
+// Animate title dropping in
+scene.tweens.add({
+    targets: title,
+    y: config.height * 0.3,
+    alpha: 1,
+    duration: 1000,
+    ease: 'Bounce.Out',
+    delay: 300
+});
+
 
     // Add 5 platforms that start at the bottom and move upward
     for (let i = 0; i < 5; i++) {
