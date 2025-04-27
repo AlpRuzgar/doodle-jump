@@ -1,12 +1,24 @@
+// Başlangıçta varsayılan ayarlar
+let deviceWidth = 560;
+let deviceHeight = 1050;
+
+// Mobil kontrolü
+let isMobile = window.innerWidth <= 768;
+
+// Eğer PC ise genişlik 
+if (!isMobile) {
+    deviceWidth = 650;
+}
+
 const config = {
     type: Phaser.AUTO,
-    width: 560,
-    height: 1050,
+    width: deviceWidth,
+    height: deviceHeight,
     scale: {
-        mode: Phaser.Scale.FIT,       // Ekrana sığdır
-        autoCenter: Phaser.Scale.CENTER_BOTH, // Ortala
-        width: 560,
-        height: 1050
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: deviceWidth,
+        height: deviceHeight
     },
     physics: {
         default: 'arcade',
@@ -144,7 +156,7 @@ function create() {
     addBackground(this, config.width / 2, config.height - 3 * (13200 / 5), 'background2');
     addBackground(this, config.width / 2, config.height - 4 * (13200 / 5), 'background1');
 
-    let groundColor = 0x3e2022;
+    let groundColor = 0x3D2314;
     let groundBelowTrampoline = this.add.rectangle(
         config.width / 2,
         config.height,
@@ -1729,30 +1741,30 @@ function createStartScreen(scene) {
         }
     });
 
-
-// Title with animation
-// Replace text with image
-let title = scene.add.image(
+    // Title with animation
+    // Replace text with image
+    let title = scene.add.image(
     config.width / 2,
     config.height * 0.2,
     'title' 
-);
-title.setOrigin(0.5);
-title.setScrollFactor(0);
-title.setDepth(1001);
-title.setAlpha(0);
-title.setScale(0.6);
-startScreenElements.push(title);
+    );
+    title.setOrigin(0.5);
+    title.setScrollFactor(0);
+    title.setDepth(1001);
+    title.setAlpha(0);
+    title.setScale(0.6);
+    startScreenElements.push(title);
 
-// Animate title dropping in
-scene.tweens.add({
+    // Animate title dropping in
+    scene.tweens.add({
     targets: title,
     y: config.height * 0.3,
     alpha: 1,
     duration: 1000,
     ease: 'Bounce.Out',
     delay: 300
-});
+    });
+
 
 
     // Add 5 platforms that start at the bottom and move upward
@@ -1959,114 +1971,114 @@ scene.tweens.add({
         });
     });
 
-    // "Nasıl Oynanır" butonu
-    let howToPlayButton = scene.add.image(
-        config.width / 2,
-        config.height * 0.6 + 300,
-        'howToButton',
-    );
-    howToPlayButton.setScale(0);
-    howToPlayButton.setOrigin(0.5);
-    howToPlayButton.setScrollFactor(0);
-    howToPlayButton.setDepth(1001);
-    howToPlayButton.setInteractive();
-    startScreenElements.push(howToPlayButton);
+  // "Nasıl Oynanır" butonu
+  let howToPlayButton = scene.add.image(
+    config.width / 2,
+    config.height * 0.6 + 300,
+    'howToButton',
+);
+howToPlayButton.setScale(0);
+howToPlayButton.setOrigin(0.5);
+howToPlayButton.setScrollFactor(0);
+howToPlayButton.setDepth(1001);
+howToPlayButton.setInteractive();
+startScreenElements.push(howToPlayButton);
 
-    scene.tweens.add({
-        targets: howToPlayButton,
-        scale: 0.1,
-        y: config.height * 0.6 + 300,
-        duration: 800,
-        delay: 2000,
-        ease: 'Back.Out',
-        onComplete: () => {
-            howToPlayButton.setInteractive();
+scene.tweens.add({
+    targets: howToPlayButton,
+    scale: 0.1,
+    y: config.height * 0.6 + 300,
+    duration: 800,
+    delay: 2000,
+    ease: 'Back.Out',
+    onComplete: () => {
+        howToPlayButton.setInteractive();
 
-            // Add continuous bounce effect
-            scene.tweens.add({
-                targets: howToPlayButton,
-                scale: 0.15,
-                duration: 1000,
-                yoyo: true,
-                repeat: -1,
-                ease: 'Sine.InOut'
-            });
-        }
-    });
-
-    // Button hover effects
-    howToPlayButton.on('pointerover', () => {
+        // Add continuous bounce effect
         scene.tweens.add({
             targets: howToPlayButton,
             scale: 0.15,
-            duration: 100
+            duration: 1000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.InOut'
         });
-        howToPlayButton.setTint(0xccccff);
+    }
+});
+
+// Button hover effects
+howToPlayButton.on('pointerover', () => {
+    scene.tweens.add({
+        targets: howToPlayButton,
+        scale: 0.15,
+        duration: 100
+    });
+    howToPlayButton.setTint(0xccccff);
+});
+
+howToPlayButton.on('pointerout', () => {
+    scene.tweens.add({
+        targets: howToPlayButton,
+        scale: 0.12,
+        duration: 100
+    });
+    howToPlayButton.clearTint();
+});
+
+// Click effect and start game
+howToPlayButton.on('pointerdown', () => {
+    scene.tweens.add({
+        targets: howToPlayButton,
+        scale: 0.08,
+        duration: 100
     });
 
-    howToPlayButton.on('pointerout', () => {
-        scene.tweens.add({
-            targets: howToPlayButton,
-            scale: 0.12,
-            duration: 100
-        });
-        howToPlayButton.clearTint();
-    });
+    scene.sound.play('buttonClick');
+});
 
-    // Click effect and start game
-    howToPlayButton.on('pointerdown', () => {
-        scene.tweens.add({
-            targets: howToPlayButton,
-            scale: 0.08,
-            duration: 100
-        });
+howToPlayButton.on('pointerup', () => {
+    if (isPopupOpen) return; // zaten açıksa işlem yapma
 
-        scene.sound.play('buttonClick');
-    });
+    isPopupOpen = true;
 
-    howToPlayButton.on('pointerup', () => {
-        if (isPopupOpen) return; // zaten açıksa işlem yapma
+    let popupBg = scene.add.rectangle(
+        config.width / 2,
+        config.height / 2,
+        config.width * 0.9,
+        config.height * 0.6,
+        0x000000,
+        0.85
+    );
+    popupBg.setScrollFactor(0);
+    popupBg.setDepth(2000);
 
-        isPopupOpen = true;
+    let howToPlayText = scene.add.text(
+        config.width / 2,
+        config.height / 2,
+        'hoşça kalın gidiom bne',
+        {
+            fontSize: '22px',
+            fontFamily: 'monospace',
+            fill: '#ffffff',
+            align: 'center',
+            wordWrap: { width: config.width * 0.8 }
+        }
+    ).setOrigin(0.5);
+    howToPlayText.setScrollFactor(0);
+    howToPlayText.setDepth(2001);
 
-        let popupBg = scene.add.rectangle(
-            config.width / 2,
-            config.height / 2,
-            config.width * 0.9,
-            config.height * 0.6,
-            0x000000,
-            0.85
-        );
-        popupBg.setScrollFactor(0);
-        popupBg.setDepth(2000);
-
-        let howToPlayText = scene.add.text(
-            config.width / 2,
-            config.height / 2,
-            'hoşça kalın gidiom bne',
-            {
-                fontSize: '22px',
-                fontFamily: 'monospace',
-                fill: '#ffffff',
-                align: 'center',
-                wordWrap: { width: config.width * 0.8 }
-            }
-        ).setOrigin(0.5);
-        howToPlayText.setScrollFactor(0);
-        howToPlayText.setDepth(2001);
-
-        let closeText = scene.add.text(
-            config.width / 2,
-            config.height / 2 + 180,
-            'Kapat',
-            {
-                fontSize: '24px',
-                fontFamily: 'monospace',
-                fill: '#ff6666',
-                backgroundColor: '#ffffff',
-                padding: { x: 12, y: 5 }
-            }
-        );
+    let closeText = scene.add.text(
+        config.width / 2,
+        config.height / 2 + 180,
+        'Kapat',
+        {
+            fontSize: '24px',
+            fontFamily: 'monospace',
+            fill: '#ff6666',
+            backgroundColor: '#ffffff',
+            padding: { x: 12, y: 5 }
+        }
+    );
         closeText.setOrigin(0.5);
         closeText.setInteractive();
         closeText.setScrollFactor(0);
